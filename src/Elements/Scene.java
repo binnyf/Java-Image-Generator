@@ -26,7 +26,7 @@ public class Scene {
     private double screenDistance;
     
    //variable constructor
-   public Scene(String s, Color c, AmbientLight a, List<Geometry> g,List<LightSource> l, Camera cam, double sd){
+   public Scene(String s, Color c, AmbientLight a, ArrayList<Geometry> g,ArrayList<LightSource> l, Camera cam, double sd){
        sceneName= s;
        background=c;
        ambientLight=a;
@@ -93,4 +93,11 @@ public class Scene {
     public void setScreenDistance(int i) {
         screenDistance=i;
     }
+
+    
+   public List<LightSource> getLightsList(){
+   //Returns new List with the same values as our lights, so that changes made at the callsite wont affect our variables
+	return new ArrayList<LightSource>(lights);
+        
+   }
 }

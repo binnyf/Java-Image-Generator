@@ -37,6 +37,21 @@ public class pointLight extends Light implements LightSource{ //inherits from ab
     }
     //end of variable constructor
     
+    //one variable pointList constructor
+    public pointLight(Point3D p){
+    //Sets the position to the origin
+    position = p;
+    //Sets _kc, _kl, _kq to default values that work nicely
+    Kc = 0.00000000001;
+    Kl = 0.00000000001;
+    Kq = 0.00000000001;
+    //Sets color to a default white
+    color = new Color(255, 255, 255);
+    //Sets _kA to a default 1.0
+    Ka = 1.0;
+    }
+    //end of one variable constructor
+    
     //getters and setters
     public double getKc(){
         return new Double(Kc);
