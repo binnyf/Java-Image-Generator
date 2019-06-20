@@ -78,41 +78,56 @@ public class Render {
     }
 */
     private Color calcColor(Geometry geometry, Point3D point) {
+            int numberOfLights = scene.getLightsList().size();
+            Color ambientLight = scene.getAmbient().getIntensity(point);
+            Color emissionLight = geometry.getEmission();
 
-Color ambientLight = scene.getAmbient().getIntensity(point);
-Color emissionLight = geometry.getEmission();
+            int difR=0; //initialise the colors of the lights to 0
+            int difG=0;
+            int difB=0;
+            int speR=0;
+            int speG=0;
+            int speB=0;
 
-int difR=0; //initialise the colors of the lights to 0
-int difG=0;
-int difB=0;
-int speR=0;
-int speG=0;
-int speB=0;
+            Iterator<LightSource> lights = scene.getLightsIterator();
+                while (lights.hasNext()){
+                    LightSource light=lights.next();
+                    
+                    //Check to make sure the reflected light would actually make it to the camera (It's not on the other side of the Geometry)
+			if(Math.signum(light.getL(point).dotProduct(geometry.getNormal(point))) != Math.signum(new Vector(_scene.getCamera().getP0().subtract(point)).dotProduct(geometry.getNormal(point)))) {
+				//Checks to see if the point would even get hit by the LightSource (ie that it isn't in the shadow of something else)
+				//Creates a new Ray starting at the point in question with a direction opposite the L from the light to the point (going back to the light)
+				Ray rayBackToLight = new Ray(point, new Vector(light.getL(point)).scale(-1).normalize());
+				//Adjusts its source a little bit so a geometry doesn't block itself (sliding it up the vector a little closer to the light)
+				rayBackToLight.setSource(rayBackToLight.getSource().add(rayBackToLight.getDirection().scale(.0000001)));
+				//Checks to see if there's any other geometry along the path
+				Map<Geometry, List<Point3D>> geometriesBlockingLight = getSceneRayIntersections(rayBackToLight);
+                    
+                    
+                    
+                    
+                    //calculates the diffused light
+                    Color dif =light.getIntensity(point); //find the intensity
+                    double d =geometry.normal(point).dotProduct(light.getL(point)); //calculate the dot product
+                    int k=(int) (geometry.getMaterial().getKd()*d); //caluclate the scalar
+                    difR+=k*dif.getRed();// add the red from the difusion
+                    difG+=k*dif.getGreen(); //add the green
+                    difB+=k*dif.getBlue(); //add the blue
 
-Iterator<LightSource> lights = scene.getLightsIterator();
-    while (lights.hasNext()){
-        LightSource light=lights.next();
-        Color dif =light.getIntensity(point); //find the intensity
-        double d =geometry.normal(point).dotProduct(light.getL(point)); //calculate the dot product
-        int k=(int) (geometry.getMaterial().getKd()*d); //caluclate the scalar
-        difR+=k*dif.getRed();// add the red from the difusion
-        difG+=k*dif.getGreen(); //add the green
-        difB+=k*dif.getBlue(); //add the blue
-        
-        double x=2*light.getL(point).dotProduct(geometry.normal(point));
-        Vector a =geometry.normal(point);
-        a.scale(x);
-        Vector R=light.getL(point).subtract(a); //calculate R
-        
-        int x1= (int) R.dotProduct(new Vector(scene.getCamera().P0Getter()));
-        int x2= (int) Math.pow(x1,geometry.getMaterial().getShiny());
-        x2*=geometry.getMaterial().getKs();
-        speR+=x2*dif.getRed();
-        speG+=x2*dif.getGreen();
-        speB+=x2*dif.getBlue();
-        
- 
-       
+                    double x=2*light.getL(point).dotProduct(geometry.normal(point));
+                    Vector a =geometry.normal(point);
+                    a.scale(x);
+                    Vector R=light.getL(point).subtract(a); //calculate R
+                    //calculate specular light
+                    int x1= (int) R.dotProduct(new Vector(scene.getCamera().P0Getter()));
+                    int x2= (int) Math.pow(x1,geometry.getMaterial().getShiny());
+                    x2*=geometry.getMaterial().getKs();
+                    speR+=x2*dif.getRed();
+                    speG+=x2*dif.getGreen();
+                    speB+=x2*dif.getBlue();
+
+
+
 }
     Color diffuseLight=new Color(difR,difG,difB);
     Color specularLight=new Color(speR,speG,speB);
